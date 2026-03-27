@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBS 歐巴桑手作工坊 — 鳳梨豆腐乳</title>
+<meta name="description" content="OBS 歐巴桑手作工坊，高雄燕巢手工鳳梨豆腐乳。傳統古法釀製，不添加防腐劑，通過 SGS 食品安全認證。每年限量 2,000 瓶。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   DESIGN TOKENS
+   =========================================================== */
+:root {
+  --bg:        #0C0804;
+  --surface:   #160E06;
+  --card:      #1C1108;
+  --border:    rgba(196,123,42,0.16);
+  --border-hi: rgba(232,169,74,0.5);
+  --amber:     #E8A94A;
+  --amber-dim: #C47B2A;
+  --amber-glow:rgba(232,169,74,0.12);
+  --cream:     #F7EDD8;
+  --muted:     #806040;
+  --green:     #4CAF80;
+  --red:       #E05050;
+  --serif:     'Noto Serif TC', serif;
+  --sans:      'Noto Sans TC', sans-serif;
+  --ease:      cubic-bezier(0.16,1,0.3,1);
+  --r-sm: 8px; --r-md: 14px; --r-lg: 22px; --r-xl: 32px;
+}
+
+/* ===========================================================
+   BASE
+   =========================================================== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:17px;scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--cream);overflow-x:hidden;line-height:1.75;}
+
+/* ===========================================================
+   LOADING SCREEN  ①
+   =========================================================== */
+#loader{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.8s var(--ease),visibility 0.8s;
+}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.loader-badge{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,var(--amber-dim),var(--amber));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:900;font-size:22px;color:var(--bg);
+  box-shadow:0 0 0 0 rgba(232,169,74,0.4);
+  animation:loader-pulse 1.2s ease-in-out infinite;
+}
+@keyframes loader-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(232,169,74,0.4),0 0 40px rgba(232,169,74,0.2);}
+  50%{box-shadow:0 0 0 20px rgba(232,169,74,0),0 0 60px rgba(232,169,74,0.3);}
+}
+.loader-text{
+  margin-top:1.5rem;font-size:13px;letter-spacing:0.3em;color:var(--muted);
+  text-transform:uppercase;
+  animation:loader-text-in 0.6s var(--ease) 0.2s both;
+}
+.loader-bar{
+  width:160px;height:2px;background:rgba(232,169,74,0.15);
+  border-radius:2px;margin-top:1.2rem;overflow:hidden;
+}
+.loader-bar-fill{
+  height:100%;background:linear-gradient(90deg,var(--amber-dim),var(--amber));
+  border-radius:2px;animation:loader-fill 1.8s var(--ease) forwards;
+}
+@keyframes loader-fill{from{width:0%}to{width:100%}}
+@keyframes loader-text-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===========================================================
+   CANVAS + CURSOR  ②
+   =========================================================== */
+#particle-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.5;}
+.cursor-glow{
+  position:fixed;z-index:1;pointer-events:none;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,169,74,0.06) 0%,transparent 70%);
+  transform:translate(-50%,-50%);
+}
+@media(hover:none){.cursor-glow{display:none;}}
+
+/* ===========================================================
+   AURORA + NOISE  ③
+   =========================================================== */
+.aurora{
+  position:fixed;top:0;left:0;right:0;z-index:1;height:2px;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,rgba(196,123,42,0.5) 20%,rgba(232,169,74,1) 50%,rgba(196,123,42,0.5) 80%,transparent 100%);
+  background-size:200% 100%;animation:aurora 3s linear infinite;
+}
+@keyframes aurora{from{background-position:200% 0}to{background-position:-200% 0}}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.02;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:128px;
+}
+
+/* ===========================================================
+   NAV
+   =========================================================== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:500;height:68px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2.5rem;
+  background:rgba(12,8,4,0.7);backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{display:flex;align-items:center;gap:12px;cursor:pointer;}
+.nav-logo-badge{
+  width:42px;height:42px;border-radius:50%;position:relative;
+  background:linear-gradient(135deg,var(--amber-dim),var(--amber));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:900;font-size:12px;color:var(--bg);
+  box-shadow:0 0 0 1px rgba(232,169,74,0.4),0 0 20px rgba(232,169,74,0.15);
+}
+.nav-logo-name{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--cream);}
+.nav-logo-sub{font-size:10px;color:var(--muted);display:block;letter-spacing:0.15em;}
+.nav-links{display:flex;gap:4px;}
+.nav-link{
+  padding:7px 15px;border-radius:8px;font-size:14px;color:var(--muted);
+  cursor:pointer;border:none;background:none;font-family:var(--sans);
+  transition:all 0.2s;letter-spacing:0.02em;
+}
+.nav-link:hover{background:rgba(232,169,74,0.08);color:var(--amber);}
+.nav-link.active{background:rgba(232,169,74,0.1);color:var(--amber);font-weight:600;}
+.nav-cta{
+  background:linear-gradient(135deg,var(--amber-dim),var(--amber))!important;
+  color:var(--bg)!important;font-weight:700!important;
+  padding:8px 20px!important;margin-left:4px;
+  box-shadow:0 0 20px rgba(232,169,74,0.25);transition:all 0.25s!important;
+}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 32px rgba(232,169,74,0.45)!important;}
+.hamburger{display:none;flex-direction:column;gap:5px;width:40px;height:40px;background:none;border:none;cursor:pointer;align-items:center;justify-content:center;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--cream);border-radius:2px;transition:all 0.3s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.mobile-menu{display:none;position:fixed;top:68px;inset-inline:0;bottom:0;z-index:490;background:rgba(12,8,4,0.98);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:0;border-top:1px solid var(--border);}
+.mobile-menu.open{display:flex;}
+.mobile-menu .nav-link{font-size:1.3rem;font-family:var(--serif);font-weight:700;padding:16px 48px;width:100%;text-align:center;border-bottom:1px solid var(--border);color:var(--cream);}
+.mobile-menu .nav-cta{background:linear-gradient(135deg,var(--amber-dim),var(--amber))!important;color:var(--bg)!important;margin:16px 0 0;width:80%;border-radius:var(--r-md);border:none;}
+
+/* ===========================================================
+   PAGE SYSTEM + REVEAL
+   =========================================================== */
+.page{display:none;position:relative;z-index:2;}
+.page.active{display:block;animation:page-in 0.6s var(--ease);}
+@keyframes page-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(32px);transition:opacity 0.8s var(--ease),transform 0.8s var(--ease);}
+.reveal.visible{opacity:1;transform:none;}
+.d1{transition-delay:0.1s}.d2{transition-delay:0.2s}.d3{transition-delay:0.3s}.d4{transition-delay:0.4s}
+.reveal-left{opacity:0;transform:translateX(-40px);transition:opacity 0.8s var(--ease),transform 0.8s var(--ease);}
+.reveal-left.visible{opacity:1;transform:none;}
+.reveal-right{opacity:0;transform:translateX(40px);transition:opacity 0.8s var(--ease),transform 0.8s var(--ease);}
+.reveal-right.visible{opacity:1;transform:none;}
+
+/* ===========================================================
+   GLASS CARD
+   =========================================================== */
+.glass{
+  background:rgba(22,14,6,0.7);border:1px solid var(--border);
+  border-radius:var(--r-lg);backdrop-filter:blur(12px);
+  box-shadow:0 1px 3px rgba(0,0,0,.5),0 8px 32px rgba(0,0,0,.3);
+  transition:border-color 0.3s,box-shadow 0.3s;position:relative;overflow:hidden;
+}
+.glass::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(232,169,74,0.07),transparent 40%);
+  opacity:0;transition:opacity 0.4s;pointer-events:none;
+}
+.glass:hover::before{opacity:1;}
+.glass:hover{border-color:var(--border-hi);box-shadow:0 1px 3px rgba(0,0,0,.5),0 8px 32px rgba(0,0,0,.3),0 0 40px rgba(232,169,74,0.1);}
+
+/* ===========================================================
+   TYPOGRAPHY  ④ oversized decorative kanji
+   =========================================================== */
+.eyebrow{font-size:11px;letter-spacing:0.3em;color:var(--amber);text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+.eyebrow::before{content:'';display:block;width:24px;height:1px;background:var(--amber);}
+.deco-kanji{
+  position:absolute;font-family:var(--serif);font-weight:900;
+  color:transparent;-webkit-text-stroke:1px rgba(232,169,74,0.08);
+  line-height:1;pointer-events:none;user-select:none;z-index:0;
+}
+
+/* ===========================================================
+   BUTTONS  ⑤ micro-interaction
+   =========================================================== */
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:15px;border-radius:var(--r-md);transition:all 0.25s var(--ease);position:relative;overflow:hidden;text-decoration:none;letter-spacing:0.02em;}
+.btn::after{content:'';position:absolute;inset:0;border-radius:inherit;background:rgba(255,255,255,0.1);opacity:0;transition:opacity 0.15s;}
+.btn:active::after{opacity:1;}
+.btn-p{background:linear-gradient(135deg,var(--amber-dim),var(--amber));color:var(--bg);padding:14px 32px;box-shadow:0 0 0 1px rgba(232,169,74,0.3),0 4px 24px rgba(232,169,74,0.2);}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(232,169,74,0.5),0 8px 36px rgba(232,169,74,0.35);}
+.btn-p.success{background:linear-gradient(135deg,#2D7D3A,#4CAF80)!important;animation:btn-success 0.4s var(--ease);}
+@keyframes btn-success{0%{transform:scale(0.95)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+.btn-o{background:transparent;color:var(--amber);border:1px solid var(--border-hi);padding:13px 30px;}
+.btn-o:hover{background:var(--amber-glow);border-color:var(--amber);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);padding:9px 18px;font-size:13px;border-radius:var(--r-sm);}
+.btn-ghost:hover{color:var(--cream);border-color:rgba(232,169,74,0.3);}
+.mag{display:inline-block;}
+/* Ripple */
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.25);transform:scale(0);animation:ripple-a 0.6s linear;pointer-events:none;}
+@keyframes ripple-a{to{transform:scale(4);opacity:0;}}
+
+/* ===========================================================
+   MARQUEE
+   =========================================================== */
+.marquee-strip{background:linear-gradient(135deg,var(--amber-dim),var(--amber));padding:0.9rem 0;overflow:hidden;}
+.marquee-track{display:flex;gap:3rem;animation:marquee 22s linear infinite;white-space:nowrap;}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.m-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--bg);letter-spacing:0.05em;flex-shrink:0;}
+.m-dot{width:4px;height:4px;border-radius:50%;background:rgba(12,8,4,0.3);}
+
+/* ===========================================================
+   ⑥ HERO — full-screen parallax
+   =========================================================== */
+.hero{
+  position:relative;height:100vh;min-height:600px;
+  display:flex;align-items:center;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:#0C0804;
+}
+.hero-bg img{
+  width:100%;height:100%;object-fit:cover;opacity:0.35;
+  transform:scale(1.1);
+  will-change:transform;
+}
+.hero-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(12,8,4,0.92) 0%,rgba(12,8,4,0.6) 50%,rgba(12,8,4,0.75) 100%);
+}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(100px);pointer-events:none;}
+.hero-orb-1{width:600px;height:600px;background:rgba(196,123,42,0.08);top:-200px;left:-200px;animation:orb 10s ease-in-out infinite;}
+.hero-orb-2{width:400px;height:400px;background:rgba(232,169,74,0.05);top:50%;right:-100px;animation:orb 13s ease-in-out infinite reverse;}
+@keyframes orb{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.08)}}
+.hero-content{
+  position:relative;z-index:2;
+  padding:calc(68px + 4rem) 5vw 4rem;
+  max-width:700px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(232,169,74,0.1);border:1px solid rgba(232,169,74,0.3);
+  border-radius:20px;padding:6px 16px;margin-bottom:2rem;
+  font-size:12px;color:var(--amber);font-weight:600;letter-spacing:0.05em;
+  backdrop-filter:blur(8px);
+}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+.hero-title{
+  font-family:var(--serif);font-weight:900;
+  font-size:clamp(3.2rem,7vw,6.5rem);
+  line-height:1.02;color:var(--cream);margin-bottom:1.8rem;
+}
+.hero-title em{
+  font-style:italic;
+  background:linear-gradient(135deg,var(--amber-dim),var(--amber));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-desc{font-size:18px;color:var(--muted);line-height:2;margin-bottom:2.5rem;max-width:440px;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:3.5rem;}
+.hero-stats{display:flex;gap:2.5rem;padding-top:2.5rem;border-top:1px solid var(--border);flex-wrap:wrap;}
+.h-stat-num{font-family:var(--serif);font-size:2.4rem;font-weight:900;color:var(--amber);line-height:1;}
+.h-stat-label{font-size:12px;color:var(--muted);margin-top:5px;letter-spacing:0.05em;}
+.hero-scroll-hint{
+  position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--muted);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
+  animation:scroll-hint 2s ease-in-out infinite;
+}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--muted),transparent);}
+@keyframes scroll-hint{0%,100%{opacity:0.5;transform:translateX(-50%) translateY(0)}50%{opacity:1;transform:translateX(-50%) translateY(6px)}}
+
+/* ===========================================================
+   ② SCROLL-DRIVEN STATS SECTION
+   =========================================================== */
+.stats-section{
+  padding:8rem 5vw;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;position:relative;overflow:hidden;
+  border-top:1px solid var(--border);
+}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;max-width:900px;width:100%;margin-top:4rem;}
+.stat-block{
+  padding:3rem 2rem;border:1px solid var(--border);
+  background:var(--card);position:relative;overflow:hidden;
+  transition:border-color 0.3s;
+}
+.stat-block:first-child{border-radius:var(--r-lg) 0 0 var(--r-lg);}
+.stat-block:last-child{border-radius:0 var(--r-lg) var(--r-lg) 0;}
+.stat-block:hover{border-color:var(--border-hi);}
+.stat-big{font-family:var(--serif);font-size:clamp(3rem,6vw,5rem);font-weight:900;color:var(--amber);line-height:1;}
+.stat-unit{font-size:1.2rem;color:var(--amber-dim);}
+.stat-desc{font-size:14px;color:var(--muted);margin-top:0.8rem;line-height:1.8;}
+.stat-deco{position:absolute;bottom:-20px;right:-10px;font-family:var(--serif);font-size:120px;font-weight:900;color:transparent;-webkit-text-stroke:1px rgba(232,169,74,0.04);line-height:1;pointer-events:none;}
+
+/* ===========================================================
+   ② SCROLL-DRIVEN STORY SECTION (text + parallax panels)
+   =========================================================== */
+.story-section{padding:8rem 5vw;position:relative;overflow:hidden;border-top:1px solid var(--border);}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;max-width:1100px;margin:0 auto;}
+.story-text p{font-size:16px;color:var(--muted);line-height:2.3;margin-bottom:1.2rem;}
+.story-text p strong{color:var(--cream);}
+.story-img-stack{position:relative;height:500px;}
+.story-img-main{
+  position:absolute;top:0;left:0;right:0;bottom:80px;
+  border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.story-img-main img{width:100%;height:100%;object-fit:cover;filter:sepia(10%) brightness(0.85);}
+.story-img-float{
+  position:absolute;bottom:0;right:-20px;width:65%;height:200px;
+  border-radius:var(--r-md);overflow:hidden;
+  border:3px solid var(--card);
+  box-shadow:0 12px 40px rgba(0,0,0,0.5);
+}
+.story-img-float img{width:100%;height:100%;object-fit:cover;filter:sepia(10%) brightness(0.85);}
+
+/* ===========================================================
+   BENTO GRID
+   =========================================================== */
+.bento-section{padding:8rem 5vw;border-top:1px solid var(--border);}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:70px;gap:14px;}
+.b-story{grid-column:1/6;grid-row:1/8;padding:2.5rem;}
+.b-s1{grid-column:6/9;grid-row:1/5;padding:2rem;display:flex;flex-direction:column;justify-content:flex-end;}
+.b-s2{grid-column:9/13;grid-row:1/5;padding:2rem;display:flex;flex-direction:column;justify-content:flex-end;}
+.b-sgs{grid-column:6/13;grid-row:5/8;padding:2rem;}
+.b-i1{grid-column:1/5;grid-row:8/12;overflow:hidden;border-radius:var(--r-lg);}
+.b-i2{grid-column:5/9;grid-row:8/12;overflow:hidden;border-radius:var(--r-lg);}
+.b-cta{grid-column:9/13;grid-row:8/12;padding:2rem;}
+.b-img{width:100%;height:100%;object-fit:cover;opacity:0.75;transition:opacity 0.4s,transform 0.6s var(--ease);}
+.b-i1:hover .b-img,.b-i2:hover .b-img{opacity:1;transform:scale(1.04);}
+.b-num{font-family:var(--serif);font-size:3.5rem;font-weight:900;color:var(--amber);line-height:1;}
+.b-label{font-size:13px;color:var(--muted);margin-top:6px;}
+.b-sgs-inner{display:flex;gap:2.5rem;align-items:center;height:100%;}
+.b-checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.b-check{display:flex;align-items:center;gap:6px;background:rgba(76,175,128,0.1);border:1px solid rgba(76,175,128,0.25);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--green);font-weight:600;}
+.b-cta-in{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(135deg,rgba(196,123,42,0.12),rgba(232,169,74,0.06));border-radius:inherit;}
+.b-cta-in p{font-size:14px;color:var(--muted);margin-bottom:1.5rem;line-height:1.9;}
+
+/* ===========================================================
+   ABOUT PAGE  ④ oversized kanji
+   =========================================================== */
+.page-hero{
+  padding:calc(68px + 5rem) 5vw 4rem;
+  background:linear-gradient(180deg,rgba(196,123,42,0.05) 0%,transparent 100%);
+  border-bottom:1px solid var(--border);
+  text-align:center;position:relative;overflow:hidden;
+}
+.page-hero-line{
+  position:absolute;bottom:0;left:5%;right:5%;height:1px;
+  background:linear-gradient(to right,transparent,var(--amber),transparent);
+}
+.page-hero p{font-size:18px;color:var(--muted);max-width:560px;margin:0 auto;}
+.about-layout{padding:6rem 5vw;display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:start;max-width:1100px;margin:0 auto;}
+.about-img-wrap{border-radius:var(--r-xl);overflow:hidden;position:relative;}
+.about-img-wrap img{width:100%;display:block;filter:brightness(0.85);}
+.about-img-cap{position:absolute;bottom:0;left:0;right:0;padding:2rem 1.5rem 1.2rem;background:linear-gradient(to top,rgba(12,8,4,0.9),transparent);font-size:12px;color:var(--muted);text-align:center;}
+.about-text h2{font-family:var(--serif);font-size:2rem;font-weight:900;color:var(--cream);margin:1rem 0 1.5rem;line-height:1.2;}
+.about-text p{font-size:15px;color:var(--muted);line-height:2.3;margin-bottom:1.1rem;}
+.founders{display:flex;gap:1.2rem;margin-top:3rem;padding-top:2.5rem;border-top:1px solid var(--border);}
+.fcard{flex:1;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);background:var(--card);transition:border-color 0.3s,transform 0.3s;}
+.fcard:hover{border-color:var(--border-hi);transform:translateY(-4px);}
+.fcard img{width:100%;height:150px;object-fit:cover;object-position:center;filter:sepia(15%) brightness(0.85);transition:filter 0.4s;}
+.fcard:hover img{filter:sepia(0%) brightness(1);}
+.fcard-info{padding:1rem;text-align:center;}
+.fcard-role{font-size:10px;color:var(--amber);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;}
+.fcard-name{font-family:var(--serif);font-size:1rem;font-weight:700;color:var(--cream);}
+
+/* ③ COLOR-EMOTIONAL FERMENT SECTION */
+.ferment-section{
+  padding:8rem 5vw;
+  background:linear-gradient(180deg,transparent,rgba(196,123,42,0.03),transparent);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;
+  position:relative;overflow:hidden;
+}
+.ferment-text h2{font-family:var(--serif);font-size:2.2rem;font-weight:900;color:var(--cream);margin:1rem 0;line-height:1.2;}
+.ferment-text p{font-size:15px;color:var(--muted);line-height:2.3;}
+.ferment-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.ferm-card{padding:1.8rem;border:1px solid var(--border);border-radius:var(--r-md);background:var(--card);transition:border-color 0.3s,transform 0.3s;}
+.ferm-card:hover{border-color:var(--border-hi);transform:translateY(-4px);}
+.ferm-icon{font-size:2.2rem;margin-bottom:0.9rem;display:block;}
+.ferm-title{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--cream);margin-bottom:0.4rem;}
+.ferm-desc{font-size:13px;color:var(--muted);line-height:1.9;}
+
+.process-section{padding:6rem 5vw;}
+.process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:2.5rem;}
+.proc-card{border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);transition:transform 0.3s;}
+.proc-card:hover{transform:scale(1.02);}
+.proc-card img{width:100%;height:180px;object-fit:cover;display:block;filter:brightness(0.75);transition:filter 0.4s;}
+.proc-card:hover img{filter:brightness(1);}
+.proc-label{padding:10px 14px;background:var(--card);font-size:13px;color:var(--muted);text-align:center;border-top:1px solid var(--border);}
+
+/* ===========================================================
+   PRODUCTS PAGE  ③ color by variant + scan line
+   =========================================================== */
+.products-grid{padding:3rem 5vw 5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:1060px;margin:0 auto;}
+.prod-card{border-radius:var(--r-xl);overflow:hidden;border:1px solid var(--border);background:var(--card);transition:border-color 0.3s,box-shadow 0.4s;position:relative;}
+.prod-card:hover{border-color:var(--border-hi);box-shadow:0 0 40px rgba(232,169,74,0.1);}
+.prod-card::after{content:'';position:absolute;left:0;right:0;height:2px;top:-2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);opacity:0;transition:top 0.6s var(--ease),opacity 0.15s;pointer-events:none;z-index:3;}
+.prod-card:hover::after{top:100%;opacity:1;transition:top 0.7s var(--ease),opacity 0.1s 0.6s;}
+.prod-img-area{height:280px;overflow:hidden;position:relative;}
+.prod-img-area img{width:100%;height:100%;object-fit:cover;transition:transform 0.6s var(--ease);}
+.prod-card:hover .prod-img-area img{transform:scale(1.06);}
+.prod-tag{position:absolute;top:16px;left:16px;background:rgba(12,8,4,0.8);backdrop-filter:blur(8px);border:1px solid var(--border-hi);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:var(--amber);letter-spacing:0.05em;}
+.prod-tag.spicy{border-color:rgba(224,80,80,0.5);color:var(--red);}
+.prod-body{padding:2rem;}
+.prod-name{font-family:var(--serif);font-size:1.5rem;font-weight:900;color:var(--cream);margin-bottom:4px;}
+.prod-en{font-size:11px;color:var(--muted);letter-spacing:0.15em;margin-bottom:1rem;}
+.prod-price{font-family:var(--serif);font-size:2rem;font-weight:900;color:var(--amber);}
+.prod-price small{font-size:14px;color:var(--muted);font-weight:400;font-family:var(--sans);}
+.prod-features{list-style:none;margin:1.2rem 0 1.5rem;}
+.prod-features li{font-size:14px;color:var(--muted);padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.prod-features li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+.prod-cert{display:flex;align-items:center;gap:10px;background:rgba(76,175,128,0.07);border:1px solid rgba(76,175,128,0.22);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:1rem;}
+.prod-cert-icon{width:28px;height:28px;border-radius:50%;background:rgba(76,175,128,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--green);font-weight:700;flex-shrink:0;}
+.prod-cert-title{font-size:12px;font-weight:700;color:var(--green);}
+.prod-cert-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.prod-cert-tag{font-size:10px;color:var(--green);background:rgba(76,175,128,0.08);border-radius:3px;padding:2px 7px;}
+.prod-allergy{background:rgba(232,169,74,0.07);border:1px solid rgba(232,169,74,0.22);border-radius:var(--r-sm);padding:8px 12px;font-size:12px;color:var(--amber);margin-bottom:1.2rem;}
+
+/* EAT / SGS */
+.eat-section{padding:8rem 5vw;border-top:1px solid var(--border);}
+.eat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:2.5rem;}
+.eat-card{padding:1.8rem 1.5rem;border:1px solid var(--border);border-radius:var(--r-md);background:var(--card);text-align:center;transition:border-color 0.3s,transform 0.3s;}
+.eat-card:hover{border-color:var(--border-hi);transform:translateY(-4px);}
+.eat-icon{font-size:2.2rem;display:block;margin-bottom:0.9rem;}
+.eat-title{font-family:var(--serif);font-size:1rem;color:var(--cream);margin-bottom:0.5rem;font-weight:700;}
+.eat-desc{font-size:13px;color:var(--muted);line-height:1.9;}
+
+/* ③ SGS — cool green emotional zone */
+.sgs-section{
+  padding:8rem 5vw;border-top:1px solid var(--border);
+  background:linear-gradient(180deg,transparent,rgba(76,175,128,0.03),transparent);
+  display:grid;grid-template-columns:1fr 2fr;gap:4rem;align-items:center;max-width:1060px;margin:0 auto;
+}
+.sgs-badge{border:1px solid rgba(76,175,128,0.25);border-radius:var(--r-xl);padding:2.5rem;text-align:center;background:rgba(76,175,128,0.04);}
+.sgs-logo{font-size:3rem;margin-bottom:0.8rem;}
+.sgs-name{font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:0.3rem;}
+.sgs-sub{font-size:12px;color:var(--muted);margin-bottom:1.5rem;}
+.sgs-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--green);padding:6px 0;border-bottom:1px solid var(--border);}
+.sgs-check:last-child{border:none;}
+.sgs-check::before{content:'✓';font-weight:700;flex-shrink:0;}
+.sgs-text h3{font-family:var(--serif);font-size:1.8rem;font-weight:900;color:var(--cream);margin:1rem 0;line-height:1.2;}
+.sgs-text p{font-size:15px;color:var(--muted);line-height:2.2;}
+
+/* ===========================================================
+   ORDER PAGE  ③ urgency red zone
+   =========================================================== */
+.order-layout{padding:3rem 5vw 6rem;max-width:860px;margin:0 auto;}
+.order-notice{background:rgba(232,169,74,0.07);border:1px solid rgba(232,169,74,0.22);border-left:4px solid var(--amber);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:1.2rem 1.5rem;margin-bottom:1.5rem;font-size:15px;color:var(--cream);line-height:2;}
+.order-return{background:rgba(232,169,74,0.04);border:1px solid rgba(232,169,74,0.15);border-left:4px solid var(--amber-dim);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:1rem 1.5rem;margin-bottom:2rem;font-size:14px;color:var(--muted);line-height:2;}
+.stock-tracker{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:2rem 2.5rem;margin-bottom:2rem;}
+.stock-title{font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}
+.stock-sub{font-size:13px;color:var(--muted);margin-bottom:1.8rem;}
+.stock-bar-bg{background:rgba(255,255,255,0.07);border-radius:99px;height:8px;overflow:hidden;}
+.stock-bar-fill{height:100%;border-radius:99px;transition:width 1s var(--ease);background:linear-gradient(to right,var(--amber-dim),var(--amber));position:relative;overflow:hidden;}
+.stock-bar-fill::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:bar-shine 2.5s ease-in-out infinite;}
+@keyframes bar-shine{to{left:200%;}}
+.stock-bar-fill.urgent{background:linear-gradient(to right,#C83838,var(--red));}
+.stock-status{font-size:11px;color:var(--muted);text-align:right;margin-top:5px;}
+.stock-updated{font-size:11px;color:var(--muted);text-align:right;margin-top:1rem;padding-top:0.8rem;border-top:1px solid var(--border);}
+.form-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+.form-header{background:linear-gradient(135deg,var(--amber-dim),var(--amber));padding:1rem 1.8rem;font-family:var(--serif);font-size:1rem;font-weight:700;color:var(--bg);}
+/* ③ soldout — red emotional zone */
+.soldout-block{display:none;background:linear-gradient(135deg,rgba(200,56,56,0.08),rgba(224,80,80,0.04));border:1px solid rgba(224,80,80,0.25);border-radius:var(--r-xl);padding:5rem 2rem;text-align:center;}
+.soldout-icon{font-size:4rem;margin-bottom:1.5rem;display:block;animation:spin-in 0.6s var(--ease);}
+@keyframes spin-in{from{transform:rotate(-20deg) scale(0.5);opacity:0}to{transform:none;opacity:1}}
+.soldout-title{font-family:var(--serif);font-size:2rem;font-weight:900;color:var(--cream);margin-bottom:1rem;}
+.soldout-text{font-size:16px;color:var(--muted);line-height:2.2;max-width:480px;margin:0 auto 2.5rem;}
+.soldout-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+/* ===========================================================
+   CONTACT PAGE
+   =========================================================== */
+.contact-grid{padding:5rem 5vw;display:grid;grid-template-columns:1fr 1fr;gap:2rem;max-width:1000px;margin:0 auto;}
+.ccard{padding:2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:1.5rem;transition:border-color 0.3s;}
+.ccard:last-child{margin-bottom:0;}
+.ccard:hover{border-color:var(--border-hi);}
+.ccard h3{font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:1.2rem;padding-bottom:0.8rem;border-bottom:1px solid var(--border);}
+.citem{display:flex;align-items:flex-start;gap:12px;margin-bottom:1rem;}
+.citem-icon{font-size:18px;margin-top:2px;flex-shrink:0;}
+.clabel{font-size:11px;color:var(--muted);margin-bottom:3px;letter-spacing:0.05em;}
+.cvalue{font-size:16px;color:var(--cream);font-weight:500;}
+.cvalue a{color:var(--amber);text-decoration:none;}
+
+/* ===========================================================
+   ANNOUNCEMENTS PAGE
+   =========================================================== */
+.ann-body{padding:3rem 5vw 6rem;max-width:860px;margin:0 auto;}
+.ann-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;}
+.ann-filters{display:flex;gap:8px;flex-wrap:wrap;}
+.af-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-family:var(--sans);cursor:pointer;transition:all 0.2s;}
+.af-btn:hover,.af-btn.active{background:rgba(232,169,74,0.1);border-color:var(--border-hi);color:var(--amber);}
+.ann-sync{font-size:12px;color:var(--muted);}
+.ann-card{display:flex;border-radius:var(--r-md);overflow:hidden;background:var(--card);border:1px solid var(--border);margin-bottom:1rem;transition:border-color 0.3s,transform 0.25s;}
+.ann-card:hover{border-color:var(--border-hi);transform:translateX(4px);}
+.ann-accent{width:4px;flex-shrink:0;}
+.ann-accent.tag-預購{background:var(--amber);}
+.ann-accent.tag-活動{background:#5C9E6A;}
+.ann-accent.tag-通知{background:#6A7FC2;}
+.ann-accent.tag-重要{background:var(--red);}
+.ann-inner{padding:1.4rem 1.8rem;flex:1;}
+.ann-meta{display:flex;align-items:center;gap:10px;margin-bottom:0.7rem;flex-wrap:wrap;}
+.ann-pin{font-size:11px;color:var(--red);font-weight:700;letter-spacing:0.05em;}
+.ann-tag{font-size:11px;padding:3px 10px;border-radius:12px;letter-spacing:0.05em;font-weight:600;}
+.ann-tag.tag-預購{background:rgba(232,169,74,0.12);color:var(--amber);}
+.ann-tag.tag-活動{background:rgba(92,158,106,0.12);color:#7DC890;}
+.ann-tag.tag-通知{background:rgba(106,127,194,0.12);color:#9AAAE0;}
+.ann-tag.tag-重要{background:rgba(224,80,80,0.12);color:var(--red);}
+.ann-date{font-size:12px;color:var(--muted);margin-left:auto;}
+.ann-title{font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:0.5rem;line-height:1.5;}
+.ann-body-text{font-size:14px;color:var(--muted);line-height:2;}
+.ann-empty{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:15px;}
+
+/* ===========================================================
+   FOOTER
+   =========================================================== */
+.footer{background:var(--surface);border-top:1px solid var(--border);padding:5rem 5vw 2.5rem;}
+.footer-top{display:grid;grid-template-columns:1fr 1fr;gap:4rem;margin-bottom:3rem;}
+.footer-brand-name{font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--cream);margin-bottom:0.5rem;}
+.footer-tagline{font-size:13px;color:var(--muted);margin-bottom:1.5rem;}
+.footer-nav{display:flex;flex-wrap:wrap;gap:8px;}
+.footer-nav button{background:none;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:var(--sans);transition:all 0.2s;}
+.footer-nav button:hover{border-color:var(--amber);color:var(--amber);}
+.footer-legal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;}
+.footer-legal-item{font-size:12px;color:var(--muted);line-height:1.9;}
+.footer-legal-item strong{display:block;color:rgba(247,237,216,0.45);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;}
+.footer-pending{color:var(--amber);font-style:italic;font-size:12px;}
+.footer-bottom{border-top:1px solid var(--border);padding-top:1.5rem;margin-top:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+.footer-copy{font-size:12px;color:var(--muted);}
+
+/* ===========================================================
+   TYPEWRITER CURSOR
+   =========================================================== */
+.tw-cursor{display:inline-block;width:3px;height:0.85em;background:var(--amber);margin-left:3px;vertical-align:middle;animation:blink 0.75s step-end infinite;}
+@keyframes blink{50%{opacity:0;}}
+
+/* ===========================================================
+   3D TILT SHINE
+   =========================================================== */
+.tilt{transform-style:preserve-3d;transition:transform 0.08s;}
+.tilt-shine{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at var(--sx,50%) var(--sy,50%),rgba(255,255,255,0.06),transparent 60%);pointer-events:none;z-index:2;}
+
+/* ===========================================================
+   RESPONSIVE
+   =========================================================== */
+@media(max-width:768px){
+  nav{padding:0 1.2rem;}
+  .nav-links{display:none;}
+  .hamburger{display:flex;}
+  .hero-content{padding:calc(68px + 2.5rem) 1.5rem 3rem;}
+  .hero-title{font-size:clamp(2.8rem,10vw,4rem);}
+  .story-grid,.about-layout,.ferment-section,.products-grid,.contact-grid,.sgs-section{grid-template-columns:1fr;gap:2rem;}
+  .story-img-stack{height:280px;}
+  .story-img-float{display:none;}
+  .bento{display:flex;flex-direction:column;gap:14px;}
+  .stats-grid{grid-template-columns:1fr;}
+  .stat-block:first-child,.stat-block:last-child{border-radius:var(--r-lg);}
+  .process-grid{grid-template-columns:1fr 1fr;}
+  .founders{flex-direction:column;}
+  .footer-top{grid-template-columns:1fr;gap:2rem;}
+  .order-layout,.ann-body{padding:2rem 1.5rem 4rem;}
+  .sgs-section{padding:4rem 1.5rem;}
+  .eat-section,.bento-section,.stats-section,.story-section,.ferment-section{padding:5rem 1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ① LOADER -->
+<div id="loader">
+  <div class="loader-badge">OBS</div>
+  <div class="loader-text">歐巴桑手作工坊</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- EFFECTS -->
+<canvas id="particle-canvas"></canvas>
+<div class="cursor-glow" id="cursor-glow"></div>
+<div class="aurora"></div>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <div class="nav-logo" onclick="showPage('home')">
+    <div class="nav-logo-badge" data-text="OBS">OBS</div>
+    <div>
+      <div class="nav-logo-name">歐巴桑手作工坊</div>
+      <div class="nav-logo-sub">OLD BEST SISTERS</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <button class="nav-link active" data-page="home"     onclick="showPage('home')">首頁</button>
+    <button class="nav-link"        data-page="announce" onclick="showPage('announce')">公告</button>
+    <button class="nav-link"        data-page="about"    onclick="showPage('about')">關於我們</button>
+    <button class="nav-link"        data-page="products" onclick="showPage('products')">產品介紹</button>
+    <button class="nav-link"        data-page="contact"  onclick="showPage('contact')">聯絡我們</button>
+    <button class="nav-link nav-cta" data-page="order"   onclick="showPage('order')">立即預購</button>
+  </div>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <button class="nav-link" onclick="showPage('home');toggleMenu()">首頁</button>
+  <button class="nav-link" onclick="showPage('announce');toggleMenu()">公告</button>
+  <button class="nav-link" onclick="showPage('about');toggleMenu()">關於我們</button>
+  <button class="nav-link" onclick="showPage('products');toggleMenu()">產品介紹</button>
+  <button class="nav-link" onclick="showPage('contact');toggleMenu()">聯絡我們</button>
+  <button class="nav-link nav-cta" onclick="showPage('order');toggleMenu()">立即預購 →</button>
+</div>
+
+<!-- ========== PAGE: HOME ========== -->
+<div id="page-home" class="page active">
+
+  <!-- ⑥ FULL-SCREEN HERO WITH PARALLAX -->
+  <section class="hero">
+    <div class="hero-bg">
+      <img id="hero-parallax-img" src="images/products.jpg" alt="OBS 鳳梨豆腐乳">
+    </div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-content">
+      <div class="hero-badge reveal">
+        <span class="hero-dot"></span>高雄燕巢・每年限量 2,000 瓶
+      </div>
+      <h1 class="hero-title reveal d1">
+        鳳梨<br><em>豆腐乳</em><br>的好滋味
+      </h1>
+      <p class="hero-desc reveal d2" id="hero-tw" style="min-height:2.5em;"></p>
+      <div class="hero-actions reveal d3">
+        <span class="mag"><button class="btn btn-p" onclick="showPage('order')" id="cta-main">立即預購 →</button></span>
+        <span class="mag"><button class="btn btn-o" onclick="showPage('products')">認識產品</button></span>
+      </div>
+      <div class="hero-stats reveal d4" id="hero-stats">
+        <div><div class="h-stat-num count" data-t="5" data-s="+">0</div><div class="h-stat-label">年配方改良</div></div>
+        <div><div class="h-stat-num count" data-t="2000" data-s="">0</div><div class="h-stat-label">年限量瓶數</div></div>
+        <div><div class="h-stat-num">SGS</div><div class="h-stat-label">食品安全認證</div></div>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <div class="scroll-line"></div>
+      SCROLL
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-strip">
+    <div class="marquee-track">
+      <span class="m-item">🌿 不添加防腐劑</span><span class="m-dot"></span>
+      <span class="m-item">🤲 傳統古法手工製作</span><span class="m-dot"></span>
+      <span class="m-item">🍍 鮮鳳梨自然增香</span><span class="m-dot"></span>
+      <span class="m-item">✅ SGS 食品安全認證</span><span class="m-dot"></span>
+      <span class="m-item">📦 每年限量 2,000 瓶</span><span class="m-dot"></span>
+      <span class="m-item">🏠 高雄燕巢在地製作</span><span class="m-dot"></span>
+      <span class="m-item">🌿 不添加防腐劑</span><span class="m-dot"></span>
+      <span class="m-item">🤲 傳統古法手工製作</span><span class="m-dot"></span>
+      <span class="m-item">🍍 鮮鳳梨自然增香</span><span class="m-dot"></span>
+      <span class="m-item">✅ SGS 食品安全認證</span><span class="m-dot"></span>
+      <span class="m-item">📦 每年限量 2,000 瓶</span><span class="m-dot"></span>
+      <span class="m-item">🏠 高雄燕巢在地製作</span><span class="m-dot"></span>
+    </div>
+  </div>
+
+  <!-- ② STATS — oversized breathing room -->
+  <section class="stats-section">
+    <div class="eyebrow reveal" style="justify-content:center;">BY THE NUMBERS</div>
+    <!-- ④ oversized decorative kanji -->
+    <span class="deco-kanji" style="font-size:28vw;top:-2vw;left:-2vw;opacity:0.5;">乳</span>
+    <div class="stats-grid">
+      <div class="stat-block reveal d1">
+        <div class="stat-big"><span class="count" data-t="5" data-s="+">0</span></div>
+        <div class="stat-desc">年持續改良<br>精益求精的配方研究</div>
+        <div class="stat-deco">年</div>
+      </div>
+      <div class="stat-block reveal d2">
+        <div class="stat-big"><span class="count" data-t="2000" data-s="">0</span></div>
+        <div class="stat-desc">年度限量瓶數<br>售完即止，不多做一瓶</div>
+        <div class="stat-deco">瓶</div>
+      </div>
+      <div class="stat-block reveal d3">
+        <div class="stat-big"><span class="count" data-t="100" data-s="%">0</span></div>
+        <div class="stat-desc">純手工製作<br>每個步驟都由人親手完成</div>
+        <div class="stat-deco">手</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② STORY — two-panel with layered images -->
+  <section class="story-section">
+    <div class="story-grid">
+      <div class="story-text reveal-left">
+        <div class="eyebrow">OUR STORY</div>
+        <h2 class="section-title" style="font-family:var(--serif);font-size:clamp(1.8rem,2.8vw,2.8rem);font-weight:900;color:var(--cream);line-height:1.2;margin-bottom:1.5rem;">從媽媽的廚房<br>到你的餐桌</h2>
+        <p>OBS，是「<strong>Old Best Sisters</strong>」的縮寫，台語稱作「歐巴桑」——一群上了年紀、歷經人生磨練，卻依然保持自信樂觀的好姊妹。</p>
+        <p>從自己愛吃開始做，送給親朋好友，收到滿滿好評後，才開始每年限量生產。<strong>每一罐，都承載著「小時候配稀飯」的那份簡單幸福。</strong></p>
+        <p>不是工廠，不是量產。是每年一次，親手釀出來的真誠。</p>
+        <button class="btn btn-ghost" onclick="showPage('about')" style="margin-top:1.5rem;">了解品牌故事 →</button>
+      </div>
+      <div class="story-img-stack reveal-right">
+        <div class="story-img-main"><img src="images/process2.jpg" alt="裝罐"></div>
+        <div class="story-img-float"><img src="images/original.jpg" alt="原味"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENTO -->
+  <section class="bento-section">
+    <div class="eyebrow reveal" style="justify-content:center;margin-bottom:2.5rem;">CREDENTIALS &amp; HIGHLIGHTS</div>
+    <div class="bento">
+      <div class="b-story glass reveal">
+        <div class="eyebrow">BRAND</div>
+        <h2 style="font-family:var(--serif);font-size:1.8rem;font-weight:900;color:var(--cream);line-height:1.2;margin-bottom:1.2rem;">從姊妹淘廚房到每年 2,000 瓶</h2>
+        <p style="font-size:15px;color:var(--muted);line-height:2.1;flex:1;">OBS 的鳳梨豆腐乳，不只是食品，更是一段關於陪伴、時間與用心的故事。傳統古法、鮮鳳梨入味，不添加任何人工成分。</p>
+        <button class="btn btn-ghost" onclick="showPage('about')" style="margin-top:1.5rem;width:fit-content;">了解更多 →</button>
+      </div>
+      <div class="b-s1 glass reveal d1">
+        <div class="b-num"><span class="count" data-t="5" data-s="+">0</span></div>
+        <div class="b-label">年配方研發改良</div>
+      </div>
+      <div class="b-s2 glass reveal d2">
+        <div class="b-num"><span class="count" data-t="2000" data-s="">0</span></div>
+        <div class="b-label">年度限量瓶數</div>
+      </div>
+      <div class="b-sgs glass reveal d3">
+        <div class="b-sgs-inner">
+          <div style="font-size:2.8rem;flex-shrink:0;">🔬</div>
+          <div>
+            <div style="font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--cream);margin-bottom:0.5rem;">SGS 食品安全認證</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:0.8rem;">台灣檢驗科技・高雄食品實驗室・報告編號 AVA24700136</div>
+            <div class="b-checks">
+              <div class="b-check">✓ 防腐劑「未檢出」</div>
+              <div class="b-check">✓ 金黃色葡萄球菌「陰性」</div>
+              <div class="b-check">✓ 每年送驗確認</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="b-i1 glass reveal d1"><img class="b-img" src="images/process4.jpg" alt="熬煮"></div>
+      <div class="b-i2 glass reveal d2"><img class="b-img" src="images/spicy.jpg" alt="辣味"></div>
+      <div class="b-cta glass reveal d3">
+        <div class="b-cta-in">
+          <div style="font-family:var(--serif);font-size:1.4rem;font-weight:900;color:var(--cream);margin-bottom:0.8rem;">限量中</div>
+          <p>每年僅 2,000 瓶<br>售完即止</p>
+          <button class="btn btn-p" onclick="showPage('order')">立即預購</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  FOOTER_HOME
+</div>
+
+<!-- ========== PAGE: ABOUT ========== -->
+<div id="page-about" class="page">
+  <section class="page-hero">
+    <!-- ④ oversized decorative kanji -->
+    <span class="deco-kanji" style="font-size:30vw;bottom:-5vw;right:-5vw;">桑</span>
+    <div class="eyebrow reveal" style="justify-content:center;">ABOUT US</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.8rem);font-weight:900;color:var(--cream);margin:0.5rem 0 1rem;" class="reveal d1">OLD BEST SISTERS</h1>
+    <p class="reveal d2">上了年紀最好的姊妹淘，台語稱作「歐巴桑」。歷經人生磨練，卻比誰都能以同理心待人，每天保持自信樂觀，去面對每一個人。</p>
+    <div class="page-hero-line"></div>
+  </section>
+
+  <section class="about-layout">
+    <div class="reveal-left">
+      <div class="about-img-wrap">
+        <img src="images/brand.jpg" alt="OBS品牌故事">
+        <div class="about-img-cap">創辦人：朱錦綢・吳文藝｜設計師：吳雙羽｜創立於 2018.5.20</div>
+      </div>
+    </div>
+    <div class="about-text reveal-right">
+      <div class="eyebrow">BRAND STORY</div>
+      <h2>從一罐豆腐乳<br>開始的故事</h2>
+      <p>OBS 的起點，不只是品牌的誕生，而是一段關於陪伴、分享與人情味的日常。品牌標誌源自一位可愛開朗的中年婦女，她喜歡咖啡、喜歡甜點，希望在人與人的相聚之間，創造輕鬆而溫暖的氛圍。</p>
+      <p>在生活的閒暇之中，她也延續了宜蘭姊姊所教導的鳳梨豆腐乳手藝，依循傳統古法，以手工方式慢慢製作，不添加多餘成分，只保留食材最真實的風味。</p>
+      <p>一開始只是做給自己與家人，後來分享給親朋好友，獲得許多喜愛與鼓勵。於是，這份原本來自生活的小小心意，逐漸成為每年限量製作與販售的堅持。</p>
+      <div class="founders">
+        <div class="fcard reveal d1"><img src="images/ceo.jpg" alt="創辦人朱錦綢"><div class="fcard-info"><div class="fcard-role">創辦人</div><div class="fcard-name">朱錦綢</div></div></div>
+        <div class="fcard reveal d2"><img src="images/ceo2.jpg" alt="創辦人吳文藝"><div class="fcard-info"><div class="fcard-role">創辦人</div><div class="fcard-name">吳文藝</div></div></div>
+        <div class="fcard reveal d3"><img src="images/design.jpg" alt="設計師吳雙羽"><div class="fcard-info"><div class="fcard-role">品牌設計師</div><div class="fcard-name">吳雙羽</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ferment-section" style="max-width:1100px;margin:0 auto;">
+    <!-- ④ oversized kanji -->
+    <span class="deco-kanji" style="font-size:22vw;top:50%;left:50%;transform:translate(-50%,-50%);">醇</span>
+    <div class="ferment-text reveal-left">
+      <div class="eyebrow">TIME &amp; TRADITION</div>
+      <h2>時間，<br>是最好的調味料</h2>
+      <p>豆腐乳是一種傳統發酵食品。在適當的鹽分與酒精環境下，發酵本身就是最天然的保存機制——越陳越香，就像老酒一樣。<br><br>我們的豆腐乳<strong style="color:var(--cream);">不添加任何人工防腐劑</strong>，依法標示有效日期，靠傳統古法的智慧，讓時間成為最好的佐料。</p>
+    </div>
+    <div class="ferment-cards reveal-right">
+      <div class="ferm-card d1 reveal"><span class="ferm-icon">🧂</span><div class="ferm-title">天然鹽漬</div><div class="ferm-desc">適量鹽分形成天然防腐環境</div></div>
+      <div class="ferm-card d2 reveal"><span class="ferm-icon">🍶</span><div class="ferm-title">酒香醃製</div><div class="ferm-desc">傳統米酒入味，抑菌增香</div></div>
+      <div class="ferm-card d3 reveal"><span class="ferm-icon">🍍</span><div class="ferm-title">鳳梨調味</div><div class="ferm-desc">天然果酸提升風味層次</div></div>
+      <div class="ferm-card d4 reveal"><span class="ferm-icon">⏳</span><div class="ferm-title">時間釀造</div><div class="ferm-desc">越放越醇，發酵智慧千年傳承</div></div>
+    </div>
+  </section>
+
+  <section class="process-section">
+    <div class="eyebrow reveal" style="justify-content:center;">HANDMADE PROCESS</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;color:var(--cream);text-align:center;margin:0.5rem 0 2.5rem;" class="reveal d1">每一罐都是手工的溫度</h2>
+    <div class="process-grid">
+      <div class="proc-card reveal d1"><img src="images/process1.jpg" alt="辣椒"><div class="proc-label">① 嚴選新鮮辣椒</div></div>
+      <div class="proc-card reveal d2"><img src="images/process4.jpg" alt="熬煮"><div class="proc-label">② 古法熬煮入味</div></div>
+      <div class="proc-card reveal d3"><img src="images/process2.jpg" alt="裝罐"><div class="proc-label">③ 手工仔細裝罐</div></div>
+      <div class="proc-card reveal d4"><img src="images/process3.jpg" alt="裝箱"><div class="proc-label">④ 精心包裝出貨</div></div>
+    </div>
+  </section>
+
+  FOOTER_ABOUT
+</div>
+
+<!-- ========== PAGE: PRODUCTS ========== -->
+<div id="page-products" class="page">
+  <section class="page-hero" style="position:relative;overflow:hidden;">
+    <span class="deco-kanji" style="font-size:28vw;bottom:-3vw;right:-3vw;">梨</span>
+    <div class="eyebrow reveal" style="justify-content:center;">OUR PRODUCTS</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.8rem);font-weight:900;color:var(--cream);margin:0.5rem 0 1rem;" class="reveal d1">鳳梨豆腐乳</h1>
+    <p class="reveal d2">每年限量手作，兩種風味。不添加防腐劑，通過 SGS 食品安全檢驗。</p>
+    <div class="page-hero-line"></div>
+  </section>
+
+  <div class="products-grid">
+    <div class="prod-card tilt reveal">
+      <div class="prod-img-area"><img src="images/original.jpg" alt="原味"><span class="prod-tag">原味</span></div>
+      <div class="prod-body">
+        <div class="prod-name">原味鳳梨豆腐乳</div>
+        <div class="prod-en">ORIGINAL · GOLD LID · 650g</div>
+        <div class="prod-price">NT$250<small> /瓶</small></div>
+        <ul class="prod-features">
+          <li>傳統古法發酵，風味醇厚</li>
+          <li>加入鳳梨，酸甜自然清爽</li>
+          <li>絕無任何食品添加物</li>
+          <li>鳳梨酵素讓層次更豐富</li>
+        </ul>
+        <div class="prod-cert"><div class="prod-cert-icon">✓</div><div><div class="prod-cert-title">SGS 食品安全認證通過</div><div class="prod-cert-tags"><span class="prod-cert-tag">防腐劑「未檢出」</span><span class="prod-cert-tag">金黃色葡萄球菌「陰性」</span></div></div></div>
+        <div class="prod-allergy">⚠️ 過敏原：本產品含有<strong>大豆</strong>，對大豆過敏者請勿食用。</div>
+        <span class="mag"><button class="btn btn-p" onclick="showPage('order')">立即預購 →</button></span>
+      </div>
+    </div>
+    <div class="prod-card tilt reveal d2">
+      <div class="prod-img-area"><img src="images/spicy.jpg" alt="辣味"><span class="prod-tag spicy">辣味</span></div>
+      <div class="prod-body">
+        <div class="prod-name">辣味鳳梨豆腐乳</div>
+        <div class="prod-en">SPICY · RED LID · 650g</div>
+        <div class="prod-price">NT$260<small> /瓶</small></div>
+        <ul class="prod-features">
+          <li>原味基底加入嚴選新鮮辣椒</li>
+          <li>辣而不嗆，風味層次豐富</li>
+          <li>絕無任何食品添加物</li>
+          <li>喜歡重口味的首選</li>
+        </ul>
+        <div class="prod-cert"><div class="prod-cert-icon">✓</div><div><div class="prod-cert-title">SGS 食品安全認證通過</div><div class="prod-cert-tags"><span class="prod-cert-tag">防腐劑「未檢出」</span><span class="prod-cert-tag">金黃色葡萄球菌「陰性」</span></div></div></div>
+        <div class="prod-allergy">⚠️ 過敏原：本產品含有<strong>大豆</strong>，對大豆過敏者請勿食用。</div>
+        <span class="mag"><button class="btn btn-p" onclick="showPage('order')">立即預購 →</button></span>
+      </div>
+    </div>
+  </div>
+
+  <section class="eat-section">
+    <div class="eyebrow reveal" style="justify-content:center;">HOW TO EAT</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;color:var(--cream);text-align:center;margin:0.5rem 0 2.5rem;" class="reveal d1">多種吃法，每種都是驚喜</h2>
+    <div class="eat-grid">
+      <div class="eat-card reveal"><span class="eat-icon">🍚</span><div class="eat-title">配稀飯・配白飯</div><div class="eat-desc">最經典的台式吃法，一口豆腐乳配一口熱稀飯，就是小時候的好滋味</div></div>
+      <div class="eat-card reveal d1"><span class="eat-icon">🍗</span><div class="eat-title">豆乳雞醬汁</div><div class="eat-desc">加入豆腐乳醃製或作為沾醬，讓雞肉更香醇入味，是料理界的祕密武器</div></div>
+      <div class="eat-card reveal d2"><span class="eat-icon">🥬</span><div class="eat-title">炒空心菜</div><div class="eat-desc">下鍋前放入一匙，讓青菜瞬間升級，鹹香甘醇令人回味無窮</div></div>
+      <div class="eat-card reveal d3"><span class="eat-icon">🍜</span><div class="eat-title">拌麵・拌麵線</div><div class="eat-desc">挖一匙豆腐乳拌入熱麵中，簡單幾秒就完成一碗香氣四溢的懶人拌麵</div></div>
+      <div class="eat-card reveal"><span class="eat-icon">🥩</span><div class="eat-title">紅燒肉・燉肉</div><div class="eat-desc">取代部分醬油入鍋燉煮，讓肉質更軟嫩，醬汁鹹香帶果香，層次更豐富</div></div>
+      <div class="eat-card reveal d1"><span class="eat-icon">🫕</span><div class="eat-title">火鍋沾醬</div><div class="eat-desc">加入沙茶醬或芝麻醬調勻，成為風味獨特的豆腐乳火鍋沾醬，越吃越順口</div></div>
+      <div class="eat-card reveal d2"><span class="eat-icon">🥚</span><div class="eat-title">炒蛋・蒸蛋</div><div class="eat-desc">打蛋時加入少許豆腐乳一起炒，鹹香細緻，配飯超下飯</div></div>
+      <div class="eat-card reveal d3"><span class="eat-icon">🫙</span><div class="eat-title">抹醬・配吐司</div><div class="eat-desc">直接抹在吐司或饅頭上，咸鮮甘醇配上麵香，是下午茶的意外驚喜</div></div>
+    </div>
+  </section>
+
+  <!-- ③ SGS — green emotional zone -->
+  <section class="sgs-section">
+    <div class="sgs-badge reveal glass">
+      <div class="sgs-logo">🔬</div>
+      <div class="sgs-name">SGS 食品安全認證</div>
+      <div class="sgs-sub">台灣檢驗科技・高雄食品實驗室</div>
+      <div class="sgs-check">防腐劑全數「未檢出」</div>
+      <div class="sgs-check">金黃色葡萄球菌「陰性」</div>
+      <div class="sgs-check">報告編號 AVA24700136</div>
+    </div>
+    <div class="sgs-text reveal d2">
+      <div class="eyebrow">CERTIFIED SAFE</div>
+      <h3>吃得安心，<br>才是最重要的事</h3>
+      <p>我們知道，食安問題是每位消費者最在乎的。因此，OBS 鳳梨豆腐乳每年都送至 SGS 台灣檢驗科技進行食品安全檢驗，確保各類防腐劑及金黃色葡萄球菌均符合最嚴格的食品安全標準。<br><br>我們不用添加物取巧，只用時間與傳統工法，給你最純粹的發酵美味。</p>
+    </div>
+  </section>
+
+  FOOTER_PRODUCTS
+</div>
+
+<!-- ========== PAGE: ORDER ========== -->
+<div id="page-order" class="page">
+  <section class="page-hero">
+    <span class="deco-kanji" style="font-size:28vw;bottom:-3vw;right:-3vw;">購</span>
+    <div class="eyebrow reveal" style="justify-content:center;">PRE-ORDER</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.8rem);font-weight:900;color:var(--cream);margin:0.5rem 0 1rem;" class="reveal d1">限量預購</h1>
+    <p class="reveal d2">每年限量 2,000 瓶，售完為止。請填寫下方表單，我們將於收到預購後盡快與您確認。</p>
+    <div class="page-hero-line"></div>
+  </section>
+
+  <div class="order-layout">
+    <div class="order-notice reveal">📌 <strong>預購須知：</strong>確認訂單後將以 LINE 或電話通知付款方式。支援宅配（運費另計）與高雄燕巢自取。如有任何問題，歡迎直接撥打 <strong>0919-794-638</strong> 或加 LINE：<strong>0919794638</strong> 洽詢。</div>
+    <div class="order-return reveal">📋 <strong>退換貨說明：</strong>本產品屬易於腐敗、保存期限較短之食品商品，依《消費者保護法》第 19 條規定，<strong>不適用七天鑑賞期（猶豫期）</strong>之退貨規定。如收到商品有瑕疵，請於收貨後 48 小時內拍照聯繫我們處理。</div>
+    <div class="stock-tracker reveal">
+      <div class="stock-title"><span class="live-dot"></span> 本年度預購狀況</div>
+      <div class="stock-sub">每年限量 2,000 瓶・數量即時更新自 Google 試算表</div>
+      <div id="stock-content"><div style="text-align:center;padding:1.5rem;color:var(--muted);">⏳ 讀取庫存中...</div></div>
+    </div>
+    <div class="form-wrap reveal" id="form-embed-block">
+      <div class="form-header">📋 填寫預購資料</div>
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdoxTuuG-vPKW_sf-woRYp4JnI_mzCEcsaN82vOqv0BAwVZpQ/viewform?embedded=true" width="100%" height="1290" frameborder="0">載入中…</iframe>
+    </div>
+    <!-- ③ red emotional zone -->
+    <div class="soldout-block" id="soldout-block">
+      <span class="soldout-icon">🙏</span>
+      <div class="soldout-title">本年度已全數售罄</div>
+      <p class="soldout-text">感謝大家的熱情支持！2,000 瓶已全數預訂完畢。<br>歡迎加入 LINE 或追蹤 Facebook，掌握明年開放預購的第一手消息。</p>
+      <div class="soldout-actions">
+        <a href="https://line.me/ti/p/~0919794638" target="_blank" class="btn btn-p">加 LINE 收到通知</a>
+        <a href="https://www.facebook.com/zhu.jin.chou?locale=zh_TW" target="_blank" class="btn btn-o">追蹤 Facebook</a>
+      </div>
+    </div>
+  </div>
+  FOOTER_ORDER
+</div>
+
+<!-- ========== PAGE: CONTACT ========== -->
+<div id="page-contact" class="page">
+  <section class="page-hero">
+    <div class="eyebrow reveal" style="justify-content:center;">CONTACT US</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.8rem);font-weight:900;color:var(--cream);margin:0.5rem 0 1rem;" class="reveal d1">聯絡我們</h1>
+    <p class="reveal d2">有任何問題，歡迎隨時與我們聯繫</p>
+    <div class="page-hero-line"></div>
+  </section>
+  <div class="contact-grid">
+    <div>
+      <div class="ccard reveal">
+        <h3>📞 聯絡方式</h3>
+        <div class="citem"><span class="citem-icon">📱</span><div><div class="clabel">電話 / LINE</div><div class="cvalue">0919-794-638</div></div></div>
+        <div class="citem"><span class="citem-icon">💬</span><div><div class="clabel">LINE ID</div><div class="cvalue">0919794638（朱錦綢）</div></div></div>
+        <div class="citem"><span class="citem-icon">📘</span><div><div class="clabel">Facebook</div><div class="cvalue"><a href="https://www.facebook.com/zhu.jin.chou?locale=zh_TW" target="_blank">朱錦綢</a></div></div></div>
+        <div style="margin-top:1.2rem;"><a href="https://line.me/ti/p/~0919794638" target="_blank" class="btn btn-p" style="font-size:14px;padding:11px 22px;">加入 LINE 聯絡</a></div>
+      </div>
+      <div class="ccard reveal d1">
+        <h3>🕐 服務時間</h3>
+        <div class="citem"><span class="citem-icon">📅</span><div><div class="clabel">預購期間</div><div class="cvalue">每年限量，請關注 FB 最新公告</div></div></div>
+        <div class="citem"><span class="citem-icon">🚗</span><div><div class="clabel">自取方式</div><div class="cvalue">請事先以電話或 LINE 預約</div></div></div>
+      </div>
+    </div>
+    <div class="reveal d2">
+      <div class="ccard">
+        <h3>📍 自取地址</h3>
+        <div class="citem"><span class="citem-icon">🏠</span><div><div class="clabel">地址</div><div class="cvalue" style="line-height:1.9;">高雄市燕巢區<br>西燕里中西路 70 巷 65 弄 23 號</div></div></div>
+        <div style="margin-top:1.5rem;"><a href="https://maps.google.com/?q=高雄市燕巢區西燕里中西路70巷65弄23號" target="_blank" class="btn btn-o" style="font-size:14px;padding:11px 22px;">Google Maps 開啟地圖</a></div>
+        <div style="margin-top:1.5rem;background:rgba(232,169,74,0.05);border:1px solid var(--border);border-radius:var(--r-md);height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">📍 高雄市燕巢區</div>
+      </div>
+    </div>
+  </div>
+  FOOTER_CONTACT
+</div>
+
+<!-- ========== PAGE: ANNOUNCEMENTS ========== -->
+<div id="page-announce" class="page">
+  <section class="page-hero">
+    <div class="eyebrow reveal" style="justify-content:center;">ANNOUNCEMENTS</div>
+    <h1 style="font-family:var(--serif);font-size:clamp(2.2rem,4vw,3.8rem);font-weight:900;color:var(--cream);margin:0.5rem 0 1rem;" class="reveal d1">最新公告</h1>
+    <p class="reveal d2">預購資訊、活動消息與重要通知，隨時掌握最新動態</p>
+    <div class="page-hero-line"></div>
+  </section>
+  <div class="ann-body">
+    <div class="ann-toolbar reveal">
+      <div class="ann-filters" id="ann-filters">
+        <button class="af-btn active" onclick="filterAnn('全部')">全部</button>
+        <button class="af-btn" onclick="filterAnn('預購')">🛒 預購</button>
+        <button class="af-btn" onclick="filterAnn('活動')">🎉 活動</button>
+        <button class="af-btn" onclick="filterAnn('通知')">📢 通知</button>
+        <button class="af-btn" onclick="filterAnn('重要')">❗ 重要</button>
+      </div>
+      <div class="ann-sync" id="ann-sync-status"></div>
+    </div>
+    <div id="ann-list"><div class="ann-empty">⏳ 載入公告中...</div></div>
+  </div>
+  FOOTER_ANNOUNCE
+</div>
+
+<script>
+// ============================================================
+// SHARED FOOTER
+// ============================================================
+var FOOTER = '<footer class="footer"><div class="footer-top"><div><div class="footer-brand-name">OBS 歐巴桑手作工坊</div><div class="footer-tagline">OLD BEST SISTERS · 高雄燕巢・手工製作</div><div class="footer-nav"><button onclick="showPage(\'home\')">首頁</button><button onclick="showPage(\'announce\')">公告</button><button onclick="showPage(\'about\')">關於我們</button><button onclick="showPage(\'products\')">產品介紹</button><button onclick="showPage(\'order\')">預購</button><button onclick="showPage(\'contact\')">聯絡我們</button></div></div><div class="footer-legal-grid"><div class="footer-legal-item"><strong>企業經營者資訊</strong>負責人：朱錦綢<br>電話：0919-794-638<br>地址：高雄市燕巢區西燕里中西路 70 巷 65 弄 23 號</div><div class="footer-legal-item"><strong>食品業者登錄字號</strong><span class="footer-pending">辦理中，即將公告</span></div><div class="footer-legal-item"><strong>產品責任險</strong><span class="footer-pending">辦理中，即將公告</span></div><div class="footer-legal-item"><strong>過敏原警告</strong>本產品含有大豆，對大豆過敏者請勿食用。</div></div></div><div class="footer-bottom"><div class="footer-copy">© 2024 OBS 歐巴桑手作工坊・All Rights Reserved</div><div class="footer-copy">高雄市燕巢區・手工製作</div></div></footer>';
+['HOME','ABOUT','PRODUCTS','ORDER','CONTACT','ANNOUNCE'].forEach(function(p){
+  var el=document.getElementById('page-'+p.toLowerCase());
+  if(el) el.innerHTML=el.innerHTML.replace('FOOTER_'+p,FOOTER);
+});
+
+// ============================================================
+// ① LOADER
+// ============================================================
+window.addEventListener('load',function(){
+  setTimeout(function(){
+    document.getElementById('loader').classList.add('hidden');
+  },1800);
+});
+
+// ============================================================
+// CANVAS PARTICLES
+// ============================================================
+(function(){
+  var c=document.getElementById('particle-canvas');if(!c)return;
+  var ctx=c.getContext('2d'),W,H,P=[];
+  function rs(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  rs();window.addEventListener('resize',rs);
+  function r(a,b){return Math.random()*(b-a)+a;}
+  for(var i=0;i<70;i++) P.push({x:r(0,1),y:r(0,1),vx:r(-0.00015,0.00015),vy:r(-0.00025,-0.00004),s:r(1,2.2),a:r(0.15,0.6),col:Math.random()>0.55?[232,169,74]:[247,237,216]});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<P.length;i++) for(var j=i+1;j<P.length;j++){
+      var dx=(P[i].x-P[j].x)*W,dy=(P[i].y-P[j].y)*H,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){ctx.beginPath();ctx.strokeStyle='rgba(196,123,42,'+(0.07*(1-d/110))+')';ctx.lineWidth=0.5;ctx.moveTo(P[i].x*W,P[i].y*H);ctx.lineTo(P[j].x*W,P[j].y*H);ctx.stroke();}
+    }
+    P.forEach(function(p){
+      ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.s,0,Math.PI*2);
+      ctx.fillStyle='rgba('+p.col[0]+','+p.col[1]+','+p.col[2]+','+p.a+')';ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.y<-0.01){p.y=1.01;p.x=Math.random();}
+      if(p.x<-0.01)p.x=1.01;if(p.x>1.01)p.x=-0.01;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ============================================================
+// CURSOR GLOW
+// ============================================================
+(function(){
+  var g=document.getElementById('cursor-glow');if(!g)return;
+  var mx=-999,my=-999,cx=-999,cy=-999;
+  document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;});
+  function a(){cx+=(mx-cx)*0.1;cy+=(my-cy)*0.1;g.style.left=cx+'px';g.style.top=cy+'px';requestAnimationFrame(a);}a();
+})();
+
+// ============================================================
+// ⑥ HERO PARALLAX
+// ============================================================
+window.addEventListener('scroll',function(){
+  var img=document.getElementById('hero-parallax-img');
+  if(img) img.style.transform='scale(1.1) translateY('+(window.scrollY*0.25)+'px)';
+});
+
+// ============================================================
+// ① TYPEWRITER
+// ============================================================
+(function(){
+  var el=document.getElementById('hero-tw');if(!el)return;
+  var t='一口勾起小時候配稀飯的記憶。OBS 歐巴桑用傳統古法，以鳳梨入味，釀製出屬於家的味道。';
+  var i=0;
+  function type(){if(i<t.length){el.textContent=t.slice(0,++i);setTimeout(type,i<3?120:38);}}
+  setTimeout(type,1000);
+})();
+
+// ============================================================
+// ② NUMBER COUNTER
+// ============================================================
+function doCount(el){
+  var t=parseInt(el.dataset.t),s=el.dataset.s||'',st=performance.now(),dur=1800;
+  function u(n){var p=Math.min((n-st)/dur,1),e=p===1?1:1-Math.pow(2,-10*p);el.textContent=Math.round(t*e).toLocaleString()+s;if(p<1)requestAnimationFrame(u);}
+  requestAnimationFrame(u);
+}
+var cObs=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.querySelectorAll('.count[data-t]').forEach(doCount);cObs.unobserve(e.target);}});},{threshold:0.4});
+document.querySelectorAll('.hero-stats,.stats-grid,.bento').forEach(function(el){cObs.observe(el);});
+
+// ============================================================
+// RIPPLE
+// ============================================================
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.btn,button');if(!b)return;
+  var r=b.getBoundingClientRect(),rp=document.createElement('span');
+  rp.className='ripple';var sz=Math.max(r.width,r.height);
+  rp.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+(e.clientX-r.left-sz/2)+'px;top:'+(e.clientY-r.top-sz/2)+'px;position:absolute;';
+  b.style.overflow='hidden';b.appendChild(rp);setTimeout(function(){rp.remove();},700);
+});
+
+// ============================================================
+// ⑤ MAGNETIC BUTTONS
+// ============================================================
+document.querySelectorAll('.mag').forEach(function(w){
+  var b=w.querySelector('.btn,button');if(!b)return;
+  w.addEventListener('mousemove',function(e){
+    var r=w.getBoundingClientRect(),dx=(e.clientX-r.left-r.width/2)*0.35,dy=(e.clientY-r.top-r.height/2)*0.35;
+    b.style.transform='translate('+dx+'px,'+dy+'px)';b.style.transition='transform 0.08s';
+  });
+  w.addEventListener('mouseleave',function(){b.style.transform='';b.style.transition='transform 0.5s cubic-bezier(0.16,1,0.3,1)';});
+});
+
+// ============================================================
+// ⑤ 3D TILT
+// ============================================================
+document.querySelectorAll('.tilt').forEach(function(card){
+  var sh=document.createElement('div');sh.className='tilt-shine';card.appendChild(sh);
+  card.addEventListener('mousemove',function(e){
+    var r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+    card.style.transform='perspective(800px) rotateX('+((0.5-y)*10)+'deg) rotateY('+(( x-0.5)*10)+'deg) scale3d(1.02,1.02,1.02)';
+    card.style.transition='transform 0.05s';sh.style.setProperty('--sx',(x*100)+'%');sh.style.setProperty('--sy',(y*100)+'%');
+  });
+  card.addEventListener('mouseleave',function(){card.style.transform='';card.style.transition='transform 0.5s cubic-bezier(0.16,1,0.3,1)';});
+});
+
+// ============================================================
+// GLASS SPOTLIGHT
+// ============================================================
+document.querySelectorAll('.glass').forEach(function(card){
+  card.addEventListener('mousemove',function(e){
+    var r=card.getBoundingClientRect();
+    card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    card.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+// ============================================================
+// SCROLL REVEAL
+// ============================================================
+var revObs=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');revObs.unobserve(e.target);}});},{threshold:0.1});
+function initReveal(){document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(function(el){if(!el.classList.contains('visible'))revObs.observe(el);});}
+initReveal();
+
+// ============================================================
+// PAGE SWITCHING
+// ============================================================
+function showPage(name){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById('page-'+name);if(t)t.classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(function(a){a.classList.toggle('active',a.dataset.page===name);});
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='order')loadStock();
+  if(name==='announce')fetchAnn();
+  setTimeout(initReveal,60);
+}
+function toggleMenu(){document.getElementById('hamburger').classList.toggle('open');document.getElementById('mobile-menu').classList.toggle('open');}
+
+// ============================================================
+// ANNOUNCEMENTS
+// ============================================================
+var ANN_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRTj0FQkurKTBrs-TWs8rDAHww4JnkRspK8llvQmBB93XkEDS_UITqNOnegmNBh9Jvi5GiXI_aCsWcP/pub?gid=75154556&single=true&output=csv";
+var allAnn=[],annFilter='全部';
+function fetchAnn(){
+  var list=document.getElementById('ann-list'),st=document.getElementById('ann-sync-status');if(!list)return;
+  fetch(ANN_URL+'&_t='+Date.now()).then(function(r){return r.text();}).then(function(csv){
+    var rows=csv.trim().split(/\r?\n/),data=[];
+    for(var i=1;i<rows.length;i++){var c=parseCSV(rows[i]);if(!c[0])continue;data.push({title:c[0]||'',body:c[1]||'',date:c[2]||'',tag:c[3]||'通知',pinned:c[4]==='是'||c[4]==='TRUE'});}
+    allAnn=data;if(st)st.textContent='更新：'+new Date().toLocaleTimeString('zh-TW',{hour12:false});renderAnn();
+  }).catch(function(){if(!allAnn.length&&list)list.innerHTML='<div class="ann-empty">⚠️ 無法載入公告</div>';});
+}
+function parseCSV(row){var res=[],cur='',q=false;for(var i=0;i<row.length;i++){var c=row[i];if(c==='"'){q=!q;}else if(c===','&&!q){res.push(cur.trim());cur='';}else cur+=c;}res.push(cur.trim());return res;}
+function filterAnn(tag){annFilter=tag;document.querySelectorAll('.af-btn').forEach(function(b){var l=b.textContent.trim().replace(/^.\s/,'');b.classList.toggle('active',(tag==='全部'&&b.textContent.trim()==='全部')||l===tag);});renderAnn();}
+function renderAnn(){
+  var list=document.getElementById('ann-list');if(!list)return;
+  var data=allAnn.slice().sort(function(a,b){if(a.pinned&&!b.pinned)return -1;if(!a.pinned&&b.pinned)return 1;return new Date(b.date)-new Date(a.date);});
+  if(annFilter!=='全部')data=data.filter(function(a){return a.tag===annFilter;});
+  if(!data.length){list.innerHTML='<div class="ann-empty">目前沒有此類別的公告</div>';return;}
+  list.innerHTML=data.map(function(a){
+    var d=new Date(a.date+'T00:00:00'),ds=isNaN(d)?a.date:(d.getFullYear()+' / '+String(d.getMonth()+1).padStart(2,'0')+' / '+String(d.getDate()).padStart(2,'0'));
+    return '<div class="ann-card"><div class="ann-accent tag-'+a.tag+'"></div><div class="ann-inner"><div class="ann-meta">'+(a.pinned?'<span class="ann-pin">📌 置頂</span>':'')+'<span class="ann-tag tag-'+a.tag+'">'+a.tag+'</span><span class="ann-date">'+ds+'</span></div><div class="ann-title">'+esc(a.title)+'</div><div class="ann-body-text">'+esc(a.body).replace(/\n/g,'<br>')+'</div></div></div>';
+  }).join('');
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+fetchAnn();
+
+// ============================================================
+// STOCK TRACKER
+// ============================================================
+var TOTAL=2000;
+var CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRTj0FQkurKTBrs-TWs8rDAHww4JnkRspK8llvQmBB93XkEDS_UITqNOnegmNBh9Jvi5GiXI_aCsWcP/pub?gid=228557915&single=true&output=csv";
+var lastSold=null;
+function fetchInv(){
+  fetch(CSV_URL+'&_t='+Date.now()).then(function(r){return r.text();}).then(function(csv){
+    var v=parseInt(csv.trim().split(/[\r\n,]/)[0].replace(/"/g,''),10);
+    if(!isNaN(v)&&v>=0){lastSold=v;renderStock(document.getElementById('stock-content'),v);}
+  }).catch(function(){if(lastSold!==null)renderStock(document.getElementById('stock-content'),lastSold);});
+}
+function loadStock(){fetchInv();}
+fetchInv();setInterval(fetchInv,30000);
+function renderStock(el,sold){
+  if(!el)return;
+  var left=Math.max(0,TOTAL-sold),pct=Math.min(100,(sold/TOTAL)*100).toFixed(1),urg=left<=200,now=new Date().toLocaleString('zh-TW',{hour12:false});
+  var fb=document.getElementById('form-embed-block'),sb=document.getElementById('soldout-block');
+  if(fb&&sb){if(left===0){fb.style.display='none';sb.style.display='block';}else{fb.style.display='block';sb.style.display='none';}}
+  el.innerHTML='<div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">'+
+    '<div style="text-align:center;min-width:80px;"><div style="font-family:var(--serif);font-size:2.2rem;font-weight:900;line-height:1;color:'+(urg?'var(--red)':'var(--amber)')+';">'+sold.toLocaleString()+'</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">已預訂（瓶）</div></div>'+
+    '<div style="width:1px;height:48px;background:var(--border);flex-shrink:0;"></div>'+
+    '<div style="text-align:center;min-width:80px;"><div style="font-family:var(--serif);font-size:2.2rem;font-weight:900;line-height:1;color:'+(urg?'var(--red)':'var(--cream)')+';">'+left.toLocaleString()+'</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">剩餘（瓶）</div></div>'+
+    '<div style="flex:1;min-width:140px;"><div class="stock-bar-bg"><div class="stock-bar-fill'+(urg?' urgent':'')+'" style="width:'+pct+'%"></div></div><div class="stock-status">已預訂 '+pct+'%・共 '+TOTAL.toLocaleString()+' 瓶</div></div>'+
+    '</div>'+
+    (left===0?'<div style="text-align:center;background:rgba(224,80,80,0.12);border:1px solid rgba(224,80,80,0.3);border-radius:8px;padding:.7rem;font-size:14px;font-weight:700;color:var(--red);">⚠️ 本年度已全數售罄</div>':'')+
+    '<div class="stock-updated">更新時間：'+now+'</div>';
+}
+</script>
+</body>
+</html>
